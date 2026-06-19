@@ -1,0 +1,6 @@
+# Environment — never commit real credentials
+.env
+.env.local
+
+# Composer vendor directory
+workflow_portal/workflow_portal/vendor/

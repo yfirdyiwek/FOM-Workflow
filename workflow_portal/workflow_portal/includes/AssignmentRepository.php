@@ -38,10 +38,22 @@ class AssignmentRepository
         ];
     }
 
+    // ── Dashboard total count (for pagination) ────────────────────────────
+
+    public function countForDashboard(int $userId, bool $isScMember): int
+    {
+        [$where, $params] = $this->visibilityFilter($userId, $isScMember);
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM assignments a $where");
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
     // ── Dashboard assignment list ─────────────────────────────────────────
 
-    public function listForDashboard(int $userId, bool $isScMember, string $sort, string $dir): array
-    {
+    public function listForDashboard(
+        int $userId, bool $isScMember, string $sort, string $dir,
+        int $page = 1, int $perPage = 12
+    ): array {
         [$where, $params] = $this->visibilityFilter($userId, $isScMember);
 
         $dir = strtolower($dir) === 'asc' ? 'asc' : 'desc';
@@ -88,8 +100,8 @@ class AssignmentRepository
             ) st ON st.assignment_id = a.id
             $where
             ORDER BY $orderExpr $orderDir$secondaryOrder, a.updated_at DESC, a.id DESC
-            LIMIT 12");
-        $stmt->execute($params);
+            LIMIT ? OFFSET ?");
+        $stmt->execute([...$params, $perPage, ($page - 1) * $perPage]);
         return $stmt->fetchAll();
     }
 

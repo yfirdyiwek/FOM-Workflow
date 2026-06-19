@@ -10,6 +10,7 @@ $repo = new AssignmentRepository(db());
 $sort = $_GET['sort'] ?? 'committee';
 $dir  = strtolower($_GET['dir'] ?? 'asc');
 $dir  = $dir === 'asc' ? 'asc' : 'desc';
+$page = max(1, (int) ($_GET['page'] ?? 1));
 
 $committees  = user_can_create_assignment() ? $repo->listActiveCommittees() : [];
 $memberships = user_can_create_assignment() ? $repo->listEligibleLeads()    : [];
@@ -69,7 +70,10 @@ if (is_post() && (($_POST['form_action'] ?? '') === 'create_assignment_modal')) 
 }
 
 $counts      = $repo->dashboardCounts((int) $user['id'], user_is_sc_member());
-$assignments = $repo->listForDashboard((int) $user['id'], user_is_sc_member(), $sort, $dir);
+$total       = $repo->countForDashboard((int) $user['id'], user_is_sc_member());
+$totalPages  = max(1, (int) ceil($total / 12));
+$page        = min($page, $totalPages);
+$assignments = $repo->listForDashboard((int) $user['id'], user_is_sc_member(), $sort, $dir, $page);
 $activity    = $repo->recentActivity();
 
 function dashboard_sort_link(string $key, string $label, string $currentSort, string $currentDir): string
@@ -141,6 +145,33 @@ render_header('Home Dashboard', 'Organization-wide overview across SC, CC, ARDC,
         </tbody>
       </table>
     </div>
+
+    <?php if ($totalPages > 1): ?>
+    <?php
+        $prevPage = $page > 1            ? $page - 1 : null;
+        $nextPage = $page < $totalPages  ? $page + 1 : null;
+        $pageUrl  = fn(int $p) => 'dashboard.php?' . http_build_query(['sort' => $sort, 'dir' => $dir, 'page' => $p]);
+    ?>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 0 2px;border-top:1px solid var(--border-subtle);margin-top:12px;">
+      <?php if ($prevPage): ?>
+        <a class="btn btn-secondary" href="<?= e($pageUrl($prevPage)) ?>" style="min-height:34px;padding:7px 14px;font-size:.88rem;">← Previous</a>
+      <?php else: ?>
+        <span class="btn btn-secondary" style="min-height:34px;padding:7px 14px;font-size:.88rem;opacity:.35;pointer-events:none;" aria-disabled="true">← Previous</span>
+      <?php endif; ?>
+
+      <span style="font-size:.88rem;color:var(--text-secondary);white-space:nowrap;">
+        Page <strong style="color:var(--text-primary);"><?= $page ?></strong> of <?= $totalPages ?>
+        &nbsp;·&nbsp; <?= $total ?> assignment<?= $total !== 1 ? 's' : '' ?>
+      </span>
+
+      <?php if ($nextPage): ?>
+        <a class="btn btn-secondary" href="<?= e($pageUrl($nextPage)) ?>" style="min-height:34px;padding:7px 14px;font-size:.88rem;">Next →</a>
+      <?php else: ?>
+        <span class="btn btn-secondary" style="min-height:34px;padding:7px 14px;font-size:.88rem;opacity:.35;pointer-events:none;" aria-disabled="true">Next →</span>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
+
   </article>
 </section>
 

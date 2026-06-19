@@ -2,59 +2,17 @@
 require_once __DIR__ . '/includes/bootstrap.php';
 require_login();
 require_once __DIR__ . '/includes/layout.php';
+require_once __DIR__ . '/includes/AssignmentRepository.php';
 
 $user = current_user();
-$pdo = db();
-
-$where = 'WHERE a.work_type = "official"';
-$params = [];
-if (!user_is_sc_member()) {
-    // Non-SC members see only assignments where they are lead or support person
-    $uid = (int) $user['id'];
-    $where .= ' AND (a.lead_user_id = ? OR a.id IN (
-        SELECT assignment_id FROM assignment_supporting_members WHERE user_id = ?
-    ))';
-    $params = [$uid, $uid];
-}
+$repo = new AssignmentRepository(db());
 
 $sort = $_GET['sort'] ?? 'committee';
-$dir = strtolower($_GET['dir'] ?? 'asc');
-$dir = $dir === 'asc' ? 'asc' : 'desc';
+$dir  = strtolower($_GET['dir'] ?? 'asc');
+$dir  = $dir === 'asc' ? 'asc' : 'desc';
 
-$orderMap = [
-    'seq'       => 'CASE WHEN a.sort_order IS NOT NULL THEN 0 ELSE 1 END, a.sort_order, a.title',
-    // Default committee sort uses the same natural order as the left navigation: SC, CC, ARDC, FC.
-    'committee' => 'CASE c.short_code WHEN "SC" THEN 1 WHEN "CC" THEN 2 WHEN "ARDC" THEN 3 WHEN "FC" THEN 4 ELSE 99 END',
-    'title'     => 'a.title',
-    'lead'      => 'u.display_name',
-    'support'   => 'support_count',
-    'subtasks'  => 'total_subtasks',
-    'priority'  => 'FIELD(a.priority, "urgent", "high", "medium", "low")',
-    'status'    => 'a.status',
-    'due_date'  => 'a.due_date',
-    'updated'   => 'a.updated_at',
-];
-if (!isset($orderMap[$sort])) {
-    $sort = 'updated';
-}
-$orderExpr = $orderMap[$sort];
-$orderDir = $sort === 'priority' ? ($dir === 'asc' ? 'DESC' : 'ASC') : strtoupper($dir);
-$secondaryOrder = '';
-if ($sort === 'committee') {
-    $secondaryOrder = ', c.short_code ' . strtoupper($dir) . ', CASE WHEN a.sort_order IS NOT NULL THEN 0 ELSE 1 END ASC, a.sort_order ASC, a.title ASC';
-}
-
-$committees = [];
-$memberships = [];
-if (user_can_create_assignment()) {
-    $committees = $pdo->query('SELECT id, name, short_code FROM committees WHERE is_active = 1 ORDER BY name')->fetchAll();
-    $memberships = $pdo->query('SELECT u.id, u.display_name, u.first_name, u.last_name, m.committee_id, c.short_code
-        FROM users u
-        JOIN user_committee_memberships m ON m.user_id = u.id
-        JOIN committees c ON c.id = m.committee_id
-        WHERE u.is_active = 1 AND u.role_level != "superadmin"
-        ORDER BY u.display_name, u.last_name, u.first_name')->fetchAll();
-}
+$committees  = user_can_create_assignment() ? $repo->listActiveCommittees() : [];
+$memberships = user_can_create_assignment() ? $repo->listEligibleLeads()    : [];
 
 $createErrors = [];
 $createValues = [
@@ -102,22 +60,7 @@ if (is_post() && (($_POST['form_action'] ?? '') === 'create_assignment_modal')) 
     }
 
     if (!$createErrors) {
-        $stmt = $pdo->prepare('INSERT INTO assignments (title, short_description, full_description, assigned_committee_id, lead_user_id, priority, status, origin_source, work_type, date_assigned, due_date, created_by_user_id, updated_by_user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, "official", ?, ?, ?, ?, NOW(), NOW())');
-        $stmt->execute([
-            $createValues['title'],
-            $createValues['short_description'],
-            $createValues['full_description'],
-            (int) $createValues['assigned_committee_id'],
-            (int) $createValues['lead_user_id'],
-            $createValues['priority'],
-            $createValues['status'],
-            $createValues['origin_source'],
-            $createValues['date_assigned'],
-            $createValues['due_date'],
-            (int) current_user()['id'],
-            (int) current_user()['id'],
-        ]);
-        $assignmentId = (int) $pdo->lastInsertId();
+        $assignmentId = $repo->create($createValues, (int) current_user()['id']);
         activity_log((int) current_user()['id'], 'assignment_created', 'assignment', $assignmentId, 'Official assignment created: ' . $createValues['title']);
         flash('success', 'Assignment created: ' . $createValues['title']);
         $query = http_build_query(['sort' => $sort, 'dir' => $dir]);
@@ -125,45 +68,9 @@ if (is_post() && (($_POST['form_action'] ?? '') === 'create_assignment_modal')) 
     }
 }
 
-function dashboard_count(PDO $pdo, string $where, array $params, string $extra): int {
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM assignments a $where $extra");
-    $stmt->execute($params);
-    return (int) $stmt->fetchColumn();
-}
-
-$activeCount = dashboard_count($pdo, $where, $params, ' AND a.status NOT IN ("completed","archived")');
-$dueThisWeek = dashboard_count($pdo, $where, $params, ' AND a.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND a.status NOT IN ("completed","archived")');
-$overdueCount = dashboard_count($pdo, $where, $params, ' AND a.due_date < CURDATE() AND a.status NOT IN ("completed","archived")');
-$reviewCount = dashboard_count($pdo, $where, $params, ' AND a.status = "ready_for_review"');
-
-$stmt = $pdo->prepare("SELECT a.*, c.name AS committee_name, c.short_code, u.display_name AS lead_name,
-        COALESCE(sm.support_count, 0) AS support_count,
-        COALESCE(st.total_subtasks, 0) AS total_subtasks,
-        COALESCE(st.completed_subtasks, 0) AS completed_subtasks
-    FROM assignments a
-    JOIN committees c ON c.id = a.assigned_committee_id
-    LEFT JOIN users u ON u.id = a.lead_user_id
-    LEFT JOIN (SELECT assignment_id, COUNT(*) AS support_count FROM assignment_supporting_members GROUP BY assignment_id) sm ON sm.assignment_id = a.id
-    LEFT JOIN (
-        SELECT assignment_id,
-               COUNT(*) AS total_subtasks,
-               SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) AS completed_subtasks
-        FROM assignment_subtasks
-        GROUP BY assignment_id
-    ) st ON st.assignment_id = a.id
-    $where
-    ORDER BY $orderExpr $orderDir$secondaryOrder, a.updated_at DESC, a.id DESC
-    LIMIT 12");
-$stmt->execute($params);
-$assignments = $stmt->fetchAll();
-
-$stmt = $pdo->prepare("SELECT al.*, u.display_name
-    FROM activity_log al
-    LEFT JOIN users u ON u.id = al.user_id
-    ORDER BY al.created_at DESC
-    LIMIT 12");
-$stmt->execute();
-$activity = $stmt->fetchAll();
+$counts      = $repo->dashboardCounts((int) $user['id'], user_is_sc_member());
+$assignments = $repo->listForDashboard((int) $user['id'], user_is_sc_member(), $sort, $dir);
+$activity    = $repo->recentActivity();
 
 function dashboard_sort_link(string $key, string $label, string $currentSort, string $currentDir): string
 {
@@ -294,22 +201,22 @@ render_header('Home Dashboard', 'Organization-wide overview across SC, CC, ARDC,
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:14px;padding:16px 18px;">
           <div style="font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin-bottom:8px;">Active</div>
-          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;"><?= e((string) $activeCount) ?></div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;"><?= e((string) $counts['active']) ?></div>
           <div style="font-size:.84rem;color:var(--text-secondary);">Official assignments not yet completed or archived.</div>
         </div>
         <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:14px;padding:16px 18px;border-left:4px solid #b45309;">
           <div style="font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin-bottom:8px;">Due this week</div>
-          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#b45309;"><?= e((string) $dueThisWeek) ?></div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#b45309;"><?= e((string) $counts['due_this_week']) ?></div>
           <div style="font-size:.84rem;color:var(--text-secondary);">Due in the next 7 days.</div>
         </div>
         <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:14px;padding:16px 18px;border-left:4px solid #b91c1c;">
           <div style="font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin-bottom:8px;">Overdue</div>
-          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#b91c1c;"><?= e((string) $overdueCount) ?></div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#b91c1c;"><?= e((string) $counts['overdue']) ?></div>
           <div style="font-size:.84rem;color:var(--text-secondary);">Past due date and not yet completed.</div>
         </div>
         <div style="background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:14px;padding:16px 18px;border-left:4px solid #6d28d9;">
           <div style="font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--text-secondary);margin-bottom:8px;">Ready for review</div>
-          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#6d28d9;"><?= e((string) $reviewCount) ?></div>
+          <div style="font-size:2rem;font-weight:800;line-height:1;margin-bottom:4px;color:#6d28d9;"><?= e((string) $counts['ready_for_review']) ?></div>
           <div style="font-size:.84rem;color:var(--text-secondary);">Awaiting committee or steering review.</div>
         </div>
       </div>

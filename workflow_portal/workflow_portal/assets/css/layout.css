@@ -1,0 +1,61 @@
+
+.app{min-height:100vh;display:grid;grid-template-columns:var(--sidebar-width) 1fr;background:var(--surface-shell)}
+.sidebar{background:linear-gradient(180deg,var(--surface-sidebar-start) 0%,var(--surface-sidebar-end) 100%);border-right:1px solid var(--border-subtle);padding:22px 18px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;align-items:center;gap:14px;padding:8px 10px 16px;border-bottom:1px solid color-mix(in srgb,var(--text-primary) 8%, transparent)}
+.brand-mark{width:56px;height:56px;border-radius:0;background:transparent;display:grid;place-items:center;box-shadow:none;border:none;overflow:visible;flex:0 0 auto}
+.brand-mark img{width:100%;height:100%;object-fit:contain;display:block}
+.brand-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+.brand-text strong{display:block;font-size:.98rem;font-weight:750;line-height:1.12;letter-spacing:.005em}
+.brand-text span{display:block;font-size:.76rem;color:var(--text-secondary);line-height:1.35;letter-spacing:.08em;text-transform:uppercase}
+.brand--portal .brand-text strong{max-width:19ch}
+.nav-group-label{font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text-secondary);padding:0 10px;margin-top:4px}
+.nav{display:flex;flex-direction:column;gap:6px}
+.nav a{text-decoration:none;color:var(--text-primary);padding:11px 12px;border-radius:12px;display:flex;align-items:center;gap:10px;font-size:.97rem;position:relative}
+.nav a:hover{background:color-mix(in srgb,var(--surface-card) 70%, transparent)}
+.nav a.active{background:var(--surface-card);font-weight:700;box-shadow:var(--shadow-soft)}
+.nav a.active::before{content:"";position:absolute;left:0;top:10px;bottom:10px;width:4px;border-radius:999px;background:var(--brand-primary)}
+.dot{width:11px;height:11px;border-radius:50%;background:var(--text-soft);flex:0 0 auto;box-shadow:0 0 0 2px rgba(0,0,0,.08)}.sc{background:var(--committee-sc)}.cc{background:var(--committee-cc)}.ardc{background:var(--committee-ardc)}.fc{background:var(--committee-fc)}
+.sidebar-footer{margin-top:auto;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:16px;padding:14px;box-shadow:var(--shadow-soft)}
+.sidebar-footer strong{display:block;font-size:.95rem;margin-bottom:6px}.sidebar-footer span{font-size:.86rem;color:var(--text-secondary);line-height:1.45;display:block}
+.main{display:flex;flex-direction:column;align-items:center;min-width:0}
+.header{min-height:var(--header-height);width:100%;max-width:var(--content-max);background:var(--surface-overlay);backdrop-filter:blur(8px);border-bottom:1px solid var(--border-subtle);display:grid;grid-template-columns:auto 1fr auto;align-items:center;padding:12px 24px;gap:16px;position:sticky;top:0;z-index:20}
+.header-left{display:flex;align-items:center;position:relative}
+.header-center{text-align:center;min-width:0}
+.header-center h1{margin:0;font-size:1.72rem;line-height:1.3;padding:4px 0}
+.header-menu-toggle{position:relative;left:auto;top:auto;transform:none;width:38px;height:38px;border-radius:10px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+.header-right{display:flex;flex-direction:row;align-items:center;gap:10px;min-width:0;flex-shrink:0}
+.search{display:flex;align-items:center;gap:10px;background:var(--surface-card);border:1px solid var(--border-subtle);border-radius:999px;padding:9px 13px;width:200px}
+.search input{border:none;outline:none;width:100%;font-size:.93rem;background:transparent;color:var(--text-primary)}
+.theme-switch{display:inline-flex;align-items:center;gap:6px;flex:0 0 auto}
+@media (max-width:960px){.app{grid-template-columns:1fr}.sidebar{display:none}.header{padding:14px 18px;grid-template-columns:auto 1fr auto}.content{padding:18px}}
+@media (max-width:720px){.summary-grid,.summary-grid--4,.meta-grid,.token-grid{grid-template-columns:1fr}.header{grid-template-columns:auto 1fr auto}.header-center h1{font-size:1.2rem}.header-right{align-items:flex-end}}
+
+.app{transition:grid-template-columns .24s ease}
+.sidebar{transition:transform .24s ease,opacity .24s ease,margin .24s ease}
+.app.sidebar-closed{grid-template-columns:0 1fr}
+.app.sidebar-closed .sidebar{transform:translateX(-100%);opacity:0;pointer-events:none;margin-left:-1px}
+.app.sidebar-closed .header-menu-toggle{position:fixed;left:10px;top:14px;z-index:200;background:var(--surface-card);border:1px solid var(--border-subtle);box-shadow:var(--shadow-soft)}
+@media (max-width:960px){.header-menu-toggle{display:none}}.hamburger{display:inline-flex;flex-direction:column;gap:4px;align-items:center;justify-content:center}
+.hamburger span{display:block;width:16px;height:2px;border-radius:999px;background:currentColor}
+.sr-only{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.content{width:100%;padding:28px;display:flex;flex-direction:column;gap:24px;min-width:0;max-width:var(--content-max)}
+.summary-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:18px}
+.summary-grid--4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.layout-two{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(320px,.95fr);gap:24px;min-width:0}
+.layout-two-equal{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:24px;min-width:0}
+.split-card{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:18px}
+.meta-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 18px}
+.token-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:1400px){.summary-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.meta-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:1220px){.layout-two,.layout-two-equal,.split-card{grid-template-columns:1fr}.summary-grid,.summary-grid--4,.token-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:960px){.content{padding:18px}}
+@media(max-width:720px){.content{padding:14px}}
+
+/* Sidebar — light theme with committee-colored dots */
+.sidebar .nav-group-label{color:var(--text-secondary);}
+.sidebar .nav a{color:var(--text-primary);}
+.sidebar .nav a:hover{background:color-mix(in srgb,var(--surface-card) 70%, transparent);}
+.sidebar .nav a.active{background:var(--surface-card);color:var(--text-primary);font-weight:700;box-shadow:var(--shadow-soft);}
+.sidebar .nav a.active::before{background:var(--brand-primary);}
+.sidebar .brand{border-bottom-color:var(--border-subtle);}
+.sidebar .brand-name,.sidebar .brand-sub{color:var(--text-primary);}

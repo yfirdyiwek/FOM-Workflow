@@ -1,0 +1,3 @@
+-- Optional demo seed after creating your first admin account.
+-- Replace usernames/emails as needed.
+-- Passwords in this sample are NOT provided; use setup-admin.php instead for real accounts.

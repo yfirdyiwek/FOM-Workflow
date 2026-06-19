@@ -1,0 +1,1 @@
+window.WORKFLOW_CONFIG={siteTitle:"From Oblivion to Memory (FOM)",siteTagline:"Workflow Portal",brandMark:"FOM",brandLogo:"assets/fom-icon.png",defaultTheme:"light",brand:"default"};

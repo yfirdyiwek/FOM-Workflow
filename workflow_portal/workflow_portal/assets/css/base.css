@@ -1,0 +1,11 @@
+
+*{box-sizing:border-box}
+html,body{height:100%}
+html{background:var(--surface-page);color:var(--text-primary)}
+body{margin:0;font-family:var(--font-sans);background:var(--surface-page);color:var(--text-primary)}
+button,input,textarea,select{font:inherit}
+a{color:inherit}
+img{max-width:100%;display:block}
+button{transition:background .15s ease,border-color .15s ease,color .15s ease,box-shadow .15s ease}
+textarea,input,select{background:var(--surface-input);color:var(--text-primary)}
+input::placeholder,textarea::placeholder{color:var(--text-soft)}

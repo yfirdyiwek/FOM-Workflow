@@ -1,0 +1,96 @@
+:root,
+:root[data-theme="light"]{
+  /* ── Surfaces ──────────────────────────────────────────────────── */
+  --surface-page:#F8F5EC;          /* warm off-white — lighter than cream */
+  --surface-shell:#E8EEF5;         /* very light navy tint */
+  --surface-card:#ffffff;
+  --surface-muted:#FFF8E6;         /* FOM cream */
+  --surface-soft:#FAF6EE;          /* warm near-white */
+  --surface-sidebar-start:#E1EAF1; /* fom-navy-100 */
+  --surface-sidebar-end:#D2DFE9;   /* slightly deeper navy tint */
+  --surface-overlay:rgba(255,248,230,.92);
+  --surface-input:#ffffff;
+
+  /* ── Text ───────────────────────────────────────────────────────── */
+  --text-primary:#1F2937;          /* fom-ink */
+  --text-secondary:#2D6A92;        /* fom-navy-500 */
+  --text-soft:#6B7280;             /* fom-muted */
+  --text-inverse:#ffffff;
+
+  /* ── Borders & shadows ──────────────────────────────────────────── */
+  --border-subtle:#E5DFD0;         /* fom-border (warm-neutral) */
+  --border-strong:#DDC684;         /* fom-gold-300 */
+  --shadow-soft:0 10px 28px rgba(26,79,113,.08);
+  --shadow-strong:0 24px 60px rgba(26,79,113,.20);
+
+  /* ── Brand ──────────────────────────────────────────────────────── */
+  --brand-primary:#1A4F71;         /* fom-navy-700 */
+  --brand-primary-strong:#143E59;  /* fom-navy-800 */
+  --brand-accent:#C09C40;          /* fom-gold-500 */
+
+  /* ── Committee colors ───────────────────────────────────────────── */
+  /* SC  → FOM navy  (governance / brand committee) */
+  --committee-sc:#1A4F71;
+  /* CC  → FOM gold  (brand accent — happy alignment) */
+  --committee-cc:#C09C40;
+  /* ARDC → Ethiopian flag green */
+  --committee-ardc:#237a45;
+  /* FC   → Ethiopian flag red */
+  --committee-fc:#b83232;
+
+  /* ── Status badges ──────────────────────────────────────────────── */
+  /* Semantic colors deliberately outside the brand family (per FOM brand guide) */
+  --status-approved-bg:#e8f5e9;
+  --status-approved-text:#2e7d32;
+  --status-assigned-bg:#e3f2fd;
+  --status-assigned-text:#1565c0;
+  --status-progress-bg:#fff8e1;
+  --status-progress-text:#c07a00;
+  --status-blocked-bg:#fff3e0;
+  --status-blocked-text:#e65100;
+  --status-review-bg:#f3e5f5;
+  --status-review-text:#6a1b9a;
+  --status-completed-bg:#e8f5e9;
+  --status-completed-text:#1b5e20;
+  --status-archived-bg:#f5f5f5;
+  --status-archived-text:#757575;
+  --status-returned-bg:#ffebee;
+  --status-returned-text:#b71c1c;
+  --status-handoff-bg:#e3f2fd;
+  --status-handoff-text:#0d47a1;
+
+  /* ── Feedback ───────────────────────────────────────────────────── */
+  --feedback-danger-bg:#ffebee;
+  --feedback-danger-border:#ffcdd2;
+  --feedback-danger-text:#b71c1c;
+  --feedback-success-bg:#e8f5e9;
+  --feedback-success-text:#1b5e20;
+  --feedback-warning-bg:#fff8e1;
+  --feedback-warning-text:#c07a00;
+  --feedback-info-bg:#e3f2fd;
+  --feedback-info-border:#90caf9;
+  --feedback-info-text:#0d47a1;
+
+  /* ── Radius ─────────────────────────────────────────────────────── */
+  --radius-card:16px;
+  --radius-control:12px;
+  --radius-pill:999px;
+
+  /* ── Spacing ────────────────────────────────────────────────────── */
+  --space-1:4px;
+  --space-2:8px;
+  --space-3:12px;
+  --space-4:16px;
+  --space-5:20px;
+  --space-6:24px;
+  --space-7:28px;
+  --space-8:32px;
+
+  /* ── Layout ─────────────────────────────────────────────────────── */
+  --sidebar-width:268px;
+  --header-height:78px;
+  --content-max:1600px;
+
+  /* ── Typography ─────────────────────────────────────────────────── */
+  --font-sans:Inter,"Source Sans 3","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}

@@ -44,10 +44,8 @@ if (is_post()) {
                      . "If you did not request this, you can safely ignore this email.\n\n"
                      . "— " . APP_NAME;
 
-            $fromEmail = defined('MAIL_FROM') ? MAIL_FROM : 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-            $headers   = "From: {$fromEmail}\r\nReply-To: {$fromEmail}\r\nX-Mailer: PHP/" . phpversion();
-
-            mail($user['email'], $subject, $body, $headers);
+            require_once __DIR__ . '/includes/mailer.php';
+            send_mail($user['email'], $subject, $body);
         }
 
         // Always show success to prevent email enumeration

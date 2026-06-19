@@ -202,11 +202,8 @@ function send_invite_email(PDO $pdo, int $uid, string $email, string $name): voi
 "
              . "— " . APP_NAME;
 
-    $fromEmail = defined('MAIL_FROM') ? MAIL_FROM : 'noreply@' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
-    $headers   = "From: {$fromEmail}
-Reply-To: {$fromEmail}
-X-Mailer: PHP/" . phpversion();
-    mail($email, $subject, $body, $headers);
+    require_once __DIR__ . '/includes/mailer.php';
+    send_mail($email, $subject, $body);
 }
 
 // ── Data ───────────────────────────────────────────────────────────────────
